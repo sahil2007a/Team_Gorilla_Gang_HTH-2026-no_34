@@ -1,0 +1,43 @@
+{
+  "expo": {
+    "name": "agriflow-temp",
+    "slug": "agriflow-temp",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "config": {
+        "googleMapsApiKey": "AIzaSyAMf6VpOzoCWjA-_oOIP4jCJ5sZxwR2Wmg"
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyAMf6VpOzoCWjA-_oOIP4jCJ5sZxwR2Wmg"
+        }
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "scheme": "agriflow",
+    "plugins": [
+      "expo-router",
+      [
+        "react-native-maps",
+        {
+          "googleMapsApiKey": "AIzaSyAMf6VpOzoCWjA-_oOIP4jCJ5sZxwR2Wmg"
+        }
+      ]
+    ]
+  }
+}
