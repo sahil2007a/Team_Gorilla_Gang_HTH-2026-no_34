@@ -4,8 +4,8 @@
  */
 import { apiClient } from './api';
 
-const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL || '';
-const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY || '';
+const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL || 'https://apblmghgqjzihniaxtmt.supabase.co';
+const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY || 'sb_publishable_9k9MzQu6gciP3aYf5vTnHw_lUhiT5X1';
 let lastProxyFailTime = 0;
 
 const getHeaders = () => ({
@@ -45,9 +45,9 @@ export const supabaseSensors = {
    * Fetches the single latest sensor reading from Supabase table 'sensor_readings'.
    */
   getLatestReading: async () => {
-    // 1. Primary: Direct Supabase REST fetch with zero-cache timestamp
+    // 1. Primary: Direct Supabase REST fetch
     try {
-      const url = `${SUPABASE_URL}/rest/v1/sensor_readings?select=*&order=id.desc&limit=1&_t=${Date.now()}`;
+      const url = `${SUPABASE_URL}/rest/v1/sensor_readings?select=*&order=id.desc&limit=1`;
       const response = await fetch(url, {
         method: 'GET',
         headers: getHeaders(),
@@ -121,7 +121,7 @@ export const supabaseSensors = {
   getRecentReadings: async (limit = 5) => {
     // 1. Primary: Direct Supabase REST
     try {
-      const url = `${SUPABASE_URL}/rest/v1/sensor_readings?select=*&order=id.desc&limit=${limit}&_t=${Date.now()}`;
+      const url = `${SUPABASE_URL}/rest/v1/sensor_readings?select=*&order=id.desc&limit=${limit}`;
       const response = await fetch(url, {
         method: 'GET',
         headers: getHeaders(),

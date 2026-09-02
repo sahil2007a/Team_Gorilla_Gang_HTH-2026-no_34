@@ -60,6 +60,7 @@ export const useLiveSensors = (pollIntervalMs = 10000, includeHistory = false) =
     sensorData,
     recentEntries,
     hasData: sensorData?.hasData || false,
+    isLive: sensorData?.hasData || false,
     soilMoisture: sensorData?.soilMoisture,
     temperature: sensorData?.temperature,
     humidity: sensorData?.humidity,
