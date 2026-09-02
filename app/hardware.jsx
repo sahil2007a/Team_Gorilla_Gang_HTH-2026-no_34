@@ -132,21 +132,21 @@ export default function HardwareScreen() {
           <View style={styles.sensorGrid}>
             <View style={styles.sensorStat}>
               <Text style={styles.statLabel}>{t('Soil Moisture')}</Text>
-              <Text style={[styles.statValue, { color: (soilMoisture?.value ?? 42) < 35 ? '#dc2626' : '#15803d' }]}>
-                {soilMoisture?.value ?? 42}%
+              <Text style={[styles.statValue, { color: ((typeof soilMoisture === 'number' ? soilMoisture : soilMoisture?.value) ?? 42) < 35 ? '#dc2626' : '#15803d' }]}>
+                {(typeof soilMoisture === 'number' ? soilMoisture : soilMoisture?.value) ?? 42}%
               </Text>
-              <Text style={[styles.statSub, { color: (soilMoisture?.value ?? 42) < 35 ? '#dc2626' : '#15803d', fontWeight: '700' }]}>
-                {(soilMoisture?.value ?? 42) < 35 ? t('Needs Water') : t('Optimal')}
+              <Text style={[styles.statSub, { color: ((typeof soilMoisture === 'number' ? soilMoisture : soilMoisture?.value) ?? 42) < 35 ? '#dc2626' : '#15803d', fontWeight: '700' }]}>
+                {((typeof soilMoisture === 'number' ? soilMoisture : soilMoisture?.value) ?? 42) < 35 ? t('Needs Water') : t('Optimal')}
               </Text>
             </View>
             <View style={styles.sensorStat}>
               <Text style={styles.statLabel}>{t('Temperature')}</Text>
-              <Text style={styles.statValue}>{temperature?.value ?? 28.5}°C</Text>
+              <Text style={styles.statValue}>{(typeof temperature === 'number' ? temperature : temperature?.value) ?? 28.5}°C</Text>
               <Text style={styles.statSub}>{t('Live Telemetry')}</Text>
             </View>
             <View style={styles.sensorStat}>
               <Text style={styles.statLabel}>{t('Humidity')}</Text>
-              <Text style={styles.statValue}>{humidity?.value ?? 64}%</Text>
+              <Text style={styles.statValue}>{(typeof humidity === 'number' ? humidity : humidity?.value) ?? 64}%</Text>
               <Text style={styles.statSub}>{t('Relative Hum.')}</Text>
             </View>
             <View style={styles.sensorStat}>

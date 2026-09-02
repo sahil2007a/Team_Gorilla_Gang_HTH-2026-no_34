@@ -36,18 +36,21 @@ Thumbs.db
 .env
 .env*
 
-# Backend / ML / Python (Frontend-only repository)
-ml/
+# Heavy Models & Local-Only Training Scripts (Keep Local)
 models/
+ml/scripts/
+ml/api/*.log
 scratch/
-*.py
-*.bat
-*.ps1
-*.mjs
+run_backend.py
+download_mistral.py
+open-firewall.bat
+start.ps1
 final_tunnel.txt
 *.db
 *.log
+*.mjs
 __pycache__/
+*.pyc
 
 # typescript
 *.tsbuildinfo

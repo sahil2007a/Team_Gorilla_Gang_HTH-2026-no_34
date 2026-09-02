@@ -1,0 +1,9 @@
+{
+  "leaf_threshold": 0.80,
+  "plant_threshold": 0.70,
+  "image_size": 224,
+  "device": "auto",
+  "leaf_validator_weights": "ml/weights/leaf_validator.pth",
+  "plant_classifier_weights": "ml/weights/plant_classifier.pth",
+  "health_classifier_weights": "ml/weights/health_classifier.pth"
+}

@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>AgriFlow Admin Panel</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0f4f0;color:#1a2e1a}
+:root{--green:#2d7a3a;--green-light:#e8f5ea;--red:#d32f2f;--orange:#f57c00;--gray:#6b7280;--border:#d1d5db;--white:#fff;--shadow:0 1px 3px rgba(0,0,0,.12)}
+.sidebar{position:fixed;top:0;left:0;width:220px;height:100vh;background:var(--green);color:#fff;display:flex;flex-direction:column;z-index:100}
+.sidebar-logo{padding:20px;border-bottom:1px solid rgba(255,255,255,.15);font-size:20px;font-weight:800;letter-spacing:-.5px}
+.sidebar-logo span{opacity:.7;font-size:12px;display:block;font-weight:400;margin-top:2px}
+.sidebar-nav{flex:1;padding:12px 0}
+.nav-item{display:flex;align-items:center;gap:10px;padding:12px 20px;cursor:pointer;font-size:14px;font-weight:500;border-radius:0;transition:.15s;color:rgba(255,255,255,.8)}
+.nav-item:hover,.nav-item.active{background:rgba(255,255,255,.15);color:#fff}
+.nav-item .icon{font-size:18px;width:22px;text-align:center}
+.sidebar-footer{padding:16px 20px;border-top:1px solid rgba(255,255,255,.15);font-size:12px;opacity:.6}
+.main{margin-left:220px;min-height:100vh}
+.topbar{background:#fff;border-bottom:1px solid var(--border);padding:14px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:50;box-shadow:var(--shadow)}
+.topbar-title{font-size:17px;font-weight:700;color:#1a2e1a}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.badge-admin{background:var(--green-light);color:var(--green);padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700}
+.btn-logout{background:none;border:1px solid var(--border);padding:6px 14px;border-radius:8px;cursor:pointer;font-size:13px;color:var(--gray);font-weight:500}
+.btn-logout:hover{background:#f9fafb}
+.content{padding:24px}
+/* Login page */
+.login-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1a2e1a 0%,#2d7a3a 100%)}
+.login-card{background:#fff;border-radius:16px;padding:40px;width:360px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.login-logo{text-align:center;margin-bottom:28px}
+.login-logo .emoji{font-size:40px}
+.login-logo h1{font-size:24px;font-weight:800;color:#1a2e1a;margin-top:8px}
+.login-logo p{font-size:13px;color:var(--gray);margin-top:4px}
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px}
+.form-group input{width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;outline:none;transition:.15s}
+.form-group input:focus{border-color:var(--green)}
+.btn-primary{width:100%;padding:12px;background:var(--green);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px;transition:.15s}
+.btn-primary:hover{background:#245f2d}
+.error-msg{background:#fef2f2;border:1px solid #fca5a5;color:#b91c1c;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:12px}
+/* Stat cards */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:16px;margin-bottom:28px}
+.stat-card{background:#fff;border-radius:12px;padding:20px;border:1px solid var(--border);box-shadow:var(--shadow)}
+.stat-number{font-size:32px;font-weight:800;color:#1a2e1a;letter-spacing:-1px}
+.stat-label{font-size:12px;color:var(--gray);font-weight:500;margin-top:4px;text-transform:uppercase;letter-spacing:.4px}
+.stat-icon{font-size:24px;margin-bottom:8px}
+/* Table */
+.table-card{background:#fff;border-radius:12px;border:1px solid var(--border);box-shadow:var(--shadow);overflow:hidden}
+.table-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+.table-header h2{font-size:15px;font-weight:700}
+.search-bar{display:flex;gap:8px;align-items:center}
+.search-bar input,.search-bar select{padding:7px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;outline:none}
+.search-bar input:focus,.search-bar select:focus{border-color:var(--green)}
+table{width:100%;border-collapse:collapse}
+th{background:#f9fafb;padding:10px 16px;text-align:left;font-size:12px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border)}
+td{padding:12px 16px;font-size:13px;border-bottom:1px solid #f3f4f6;vertical-align:middle}
+tr:hover td{background:#f9fafb}
+tr:last-child td{border-bottom:none}
+.badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;text-transform:capitalize}
+.badge-green{background:#dcfce7;color:#15803d}
+.badge-red{background:#fee2e2;color:#dc2626}
+.badge-yellow{background:#fef9c3;color:#a16207}
+.badge-gray{background:#f3f4f6;color:#6b7280}
+.badge-blue{background:#dbeafe;color:#1d4ed8}
+.pagination{display:flex;align-items:center;justify-content:flex-end;padding:12px 20px;gap:8px;border-top:1px solid var(--border)}
+.page-btn{padding:6px 12px;border:1.5px solid var(--border);background:#fff;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500}
+.page-btn:hover{background:#f9fafb}
+.page-btn.active{background:var(--green);color:#fff;border-color:var(--green)}
+/* Modal */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center}
+.modal-overlay.show{display:flex}
+.modal{background:#fff;border-radius:16px;padding:28px;width:90%;max-width:600px;max-height:90vh;overflow-y:auto;position:relative}
+.modal-title{font-size:18px;font-weight:700;margin-bottom:20px;color:#1a2e1a}
+.modal-close{position:absolute;top:16px;right:16px;background:none;border:none;font-size:20px;cursor:pointer;color:var(--gray)}
+.detail-row{display:flex;gap:12px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #f3f4f6}
+.detail-label{font-size:12px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.4px;min-width:140px}
+.detail-value{font-size:14px;color:#1a2e1a}
+.section-title{font-size:18px;font-weight:800;color:#1a2e1a;margin-bottom:16px;letter-spacing:-.3px}
+.hidden{display:none}
+.loading{text-align:center;padding:40px;color:var(--gray)}
+.empty{text-align:center;padding:40px;color:var(--gray);font-size:14px}
+@media (max-width: 768px) {
+  .sidebar { position: static; width: 100%; height: auto; }
+  .sidebar-nav { display: flex; overflow-x: auto; padding: 4px 0; }
+  .nav-item { padding: 10px 14px; font-size: 13px; white-space: nowrap; }
+  .sidebar-footer { display: none; }
+  .main { margin-left: 0; }
+  .topbar { padding: 10px 16px; }
+  .content { padding: 16px; }
+  .stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .stat-card { padding: 14px; }
+  .stat-number { font-size: 24px; }
+  .table-card { overflow-x: auto; }
+  table { min-width: 550px; }
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN PAGE -->
+<div id="loginPage" class="login-wrap">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="emoji">🌿</div>
+      <h1>AgriFlow Admin</h1>
+      <p>Secure administrator access</p>
+    </div>
+    <div id="loginError" class="error-msg hidden"></div>
+    <div class="form-group">
+      <label>Username</label>
+      <input type="text" id="adminUser" placeholder="admin" autocomplete="username"/>
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="adminPass" placeholder="••••••••" autocomplete="current-password"
+             onkeydown="if(event.key==='Enter') doLogin()"/>
+    </div>
+    <button class="btn-primary" onclick="doLogin()">Login to Admin Panel</button>
+  </div>
+</div>
+
+<!-- ADMIN SHELL -->
+<div id="adminShell" class="hidden">
+  <div class="sidebar">
+    <div class="sidebar-logo">🌿 AgriFlow<span>Admin Panel v2.0</span></div>
+    <nav class="sidebar-nav">
+      <div class="nav-item active" onclick="showSection('dashboard')" id="nav-dashboard"><span class="icon">📊</span>Dashboard</div>
+      <div class="nav-item" onclick="showSection('farmers')" id="nav-farmers"><span class="icon">👨‍🌾</span>Farmers</div>
+      <div class="nav-item" onclick="showSection('scans')" id="nav-scans"><span class="icon">🔬</span>Scan Results</div>
+    </nav>
+    <div class="sidebar-footer">AgriFlow © 2024</div>
+  </div>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title" id="pageTitle">Dashboard</div>
+      <div class="topbar-right">
+        <span class="badge-admin">🔐 Admin</span>
+        <button class="btn-logout" onclick="doLogout()">Logout</button>
+      </div>
+    </div>
+    <div class="content">
+
+      <!-- DASHBOARD -->
+      <div id="section-dashboard">
+        <div class="section-title">Overview</div>
+        <div class="stats-grid" id="statsGrid"><div class="loading">Loading stats...</div></div>
+      </div>
+
+      <!-- FARMERS -->
+      <div id="section-farmers" class="hidden">
+        <div class="section-title">Registered Farmers</div>
+        <div class="table-card">
+          <div class="table-header">
+            <h2>All Farmers</h2>
+            <div class="search-bar">
+              <input type="text" id="farmerSearch" placeholder="Search name, mobile, village..." oninput="loadFarmers()"/>
+              <select id="farmerDistrict" onchange="loadFarmers()">
+                <option value="">All Districts</option>
+              </select>
+            </div>
+          </div>
+          <table>
+            <thead><tr><th>#</th><th>Name</th><th>Mobile</th><th>Village</th><th>District</th><th>Registered</th><th></th></tr></thead>
+            <tbody id="farmersTable"><tr><td colspan="7" class="loading">Loading...</td></tr></tbody>
+          </table>
+          <div class="pagination" id="farmerPagination"></div>
+        </div>
+      </div>
+
+      <!-- SCANS -->
+      <div id="section-scans" class="hidden">
+        <div class="section-title">Crop Scan Results</div>
+        <div class="table-card">
+          <div class="table-header">
+            <h2>All Scans</h2>
+            <div class="search-bar">
+              <input type="text" id="scanSearch" placeholder="Search crop, disease..." oninput="loadScans()"/>
+              <select id="scanHealth" onchange="loadScans()">
+                <option value="">All Status</option>
+                <option>Healthy</option>
+                <option>Diseased</option>
+                <option>Nutrient Deficient</option>
+                <option>Dry</option>
+                <option>Damaged</option>
+                <option>Infected</option>
+              </select>
+            </div>
+          </div>
+          <table>
+            <thead><tr><th>#</th><th>Farmer</th><th>Crop</th><th>Confidence</th><th>Status</th><th>Disease</th><th>Severity</th><th>Date</th><th></th></tr></thead>
+            <tbody id="scansTable"><tr><td colspan="9" class="loading">Loading...</td></tr></tbody>
+          </table>
+          <div class="pagination" id="scanPagination"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- FARMER DETAIL MODAL -->
+<div class="modal-overlay" id="farmerModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('farmerModal')">✕</button>
+    <div class="modal-title">Farmer Details</div>
+    <div id="farmerModalContent"></div>
+  </div>
+</div>
+
+<!-- SCAN DETAIL MODAL -->
+<div class="modal-overlay" id="scanModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('scanModal')">✕</button>
+    <div class="modal-title">Scan Details</div>
+    <div id="scanModalContent"></div>
+  </div>
+</div>
+
+<script>
+const API = window.location.pathname.includes('/proxy') ? '/proxy' : '';
+let adminToken = localStorage.getItem('agriflow_admin_token');
+let farmerOffset = 0, scanOffset = 0;
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  if (adminToken) {
+    showAdmin();
+  } else {
+    showLogin();
+  }
+});
+
+function showLogin() {
+  document.getElementById('loginPage').classList.remove('hidden');
+  document.getElementById('adminShell').classList.add('hidden');
+}
+
+function showAdmin() {
+  document.getElementById('loginPage').classList.add('hidden');
+  document.getElementById('adminShell').classList.remove('hidden');
+  showSection('dashboard');
+}
+
+function authHeader() {
+  return { 'Authorization': `Bearer ${adminToken}`, 'Content-Type': 'application/json' };
+}
+
+// ── Login / Logout ────────────────────────────────────────────────────────────
+async function doLogin() {
+  const username = document.getElementById('adminUser').value.trim();
+  const password = document.getElementById('adminPass').value.trim();
+  const errDiv = document.getElementById('loginError');
+  errDiv.classList.add('hidden');
+
+  if (!username || !password) {
+    errDiv.textContent = 'Please enter username and password';
+    errDiv.classList.remove('hidden');
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API}/admin/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+    const data = await res.json();
+    if (res.ok && data.token) {
+      adminToken = data.token;
+      localStorage.setItem('agriflow_admin_token', adminToken);
+      showAdmin();
+    } else {
+      errDiv.textContent = data.detail || 'Login failed';
+      errDiv.classList.remove('hidden');
+    }
+  } catch (e) {
+    errDiv.textContent = 'Network error. Make sure backend is running.';
+    errDiv.classList.remove('hidden');
+  }
+}
+
+function doLogout() {
+  adminToken = null;
+  localStorage.removeItem('agriflow_admin_token');
+  showLogin();
+}
+
+// ── Section Switching ─────────────────────────────────────────────────────────
+function showSection(name) {
+  ['dashboard','farmers','scans'].forEach(s => {
+    document.getElementById(`section-${s}`).classList.toggle('hidden', s !== name);
+    const nav = document.getElementById(`nav-${s}`);
+    if (nav) nav.classList.toggle('active', s === name);
+  });
+  const titles = { dashboard: 'Dashboard', farmers: 'Registered Farmers', scans: 'Scan Results' };
+  document.getElementById('pageTitle').textContent = titles[name] || name;
+
+  if (name === 'dashboard') loadDashboard();
+  if (name === 'farmers') loadFarmers();
+  if (name === 'scans') loadScans();
+}
+
+// ── Dashboard ─────────────────────────────────────────────────────────────────
+async function loadDashboard() {
+  const res = await fetch(`${API}/admin/dashboard`, { headers: authHeader() });
+  if (res.status === 401) { doLogout(); return; }
+  const data = await res.json();
+  const grid = document.getElementById('statsGrid');
+  grid.innerHTML = `
+    <div class="stat-card"><div class="stat-icon">👨‍🌾</div><div class="stat-number">${data.total_farmers}</div><div class="stat-label">Total Farmers</div></div>
+    <div class="stat-card"><div class="stat-icon">🌱</div><div class="stat-number">${data.total_crops}</div><div class="stat-label">Registered Crops</div></div>
+    <div class="stat-card"><div class="stat-icon">🔬</div><div class="stat-number">${data.total_scans}</div><div class="stat-label">Total Scans</div></div>
+    <div class="stat-card"><div class="stat-icon">⚠️</div><div class="stat-number" style="color:var(--red)">${data.diseased_scans}</div><div class="stat-label">Diseased Crops</div></div>
+    <div class="stat-card"><div class="stat-icon">🧪</div><div class="stat-number">${data.soil_logs}</div><div class="stat-label">Soil Logs</div></div>
+  `;
+}
+
+// ── Farmers ───────────────────────────────────────────────────────────────────
+async function loadFarmers() {
+  const search = document.getElementById('farmerSearch').value;
+  const district = document.getElementById('farmerDistrict').value;
+  const url = `${API}/admin/farmers?search=${encodeURIComponent(search)}&district=${encodeURIComponent(district)}&offset=${farmerOffset}&limit=50`;
+  const res = await fetch(url, { headers: authHeader() });
+  const data = await res.json();
+  const tbody = document.getElementById('farmersTable');
+  if (!data.farmers?.length) { tbody.innerHTML = '<tr><td colspan="7" class="empty">No farmers found</td></tr>'; return; }
+  tbody.innerHTML = data.farmers.map((f,i) => `
+    <tr>
+      <td style="color:var(--gray)">${farmerOffset+i+1}</td>
+      <td><strong>${f.name}</strong></td>
+      <td>${f.mobile}</td>
+      <td>${f.village}</td>
+      <td><span class="badge badge-blue">${f.district}</span></td>
+      <td>${f.created_at?.split('T')[0]||f.created_at?.split(' ')[0]||''}</td>
+      <td><button class="btn-edit" onclick="viewFarmer(${f.id})">Details</button></td>
+    </tr>`).join('');
+  document.getElementById('farmerPagination').innerHTML = `<span style="font-size:13px;color:var(--gray)">Showing ${data.farmers.length} of ${data.total}</span>`;
+}
+
+async function viewFarmer(id) {
+  const res = await fetch(`${API}/admin/farmers/${id}`, { headers: authHeader() });
+  const f = await res.json();
+  document.getElementById('farmerModalContent').innerHTML = `
+    <div class="detail-row"><div class="detail-label">Name</div><div class="detail-value"><strong>${f.name}</strong></div></div>
+    <div class="detail-row"><div class="detail-label">Mobile</div><div class="detail-value">${f.mobile}</div></div>
+    <div class="detail-row"><div class="detail-label">Location</div><div class="detail-value">${f.village}, ${f.district}, ${f.state}</div></div>
+    <div class="detail-row"><div class="detail-label">Registered</div><div class="detail-value">${f.created_at}</div></div>
+    <h3 style="font-size:14px;margin:16px 0 8px">Registered Crops (${f.crops?.length||0})</h3>
+    <table>
+      <thead><tr><th>Crop</th><th>Field</th><th>Acreage</th><th>Sown</th></tr></thead>
+      <tbody>${(f.crops||[]).map(c=>`<tr><td><strong>${c.crop_name}</strong></td><td>${c.field_name||'—'}</td><td>${c.acreage} ac</td><td>${c.sowing_date||'—'}</td></tr>`).join('') || '<tr><td colspan="4" class="empty">No crops registered</td></tr>'}</tbody>
+    </table>
+    <h3 style="font-size:14px;margin:16px 0 8px">Recent Scans (${f.recent_scans?.length||0})</h3>
+    <table>
+      <thead><tr><th>Crop</th><th>Status</th><th>Disease</th><th>Date</th></tr></thead>
+      <tbody>${(f.recent_scans||[]).map(s=>`<tr><td>${s.crop_name||'—'}</td><td><span class="badge ${statusBadge(s.health_status)}">${s.health_status||'—'}</span></td><td>${s.disease_name||'None'}</td><td>${s.created_at?.split('T')[0]||''}</td></tr>`).join('') || '<tr><td colspan="4" class="empty">No scans yet</td></tr>'}</tbody>
+    </table>`;
+  document.getElementById('farmerModal').classList.add('show');
+}
+
+// ── Scans ─────────────────────────────────────────────────────────────────────
+async function loadScans() {
+  const search = document.getElementById('scanSearch').value;
+  const health = document.getElementById('scanHealth').value;
+  const url = `${API}/admin/scans?search=${encodeURIComponent(search)}&health_status=${encodeURIComponent(health)}&offset=${scanOffset}&limit=50`;
+  const res = await fetch(url, { headers: authHeader() });
+  const data = await res.json();
+  const tbody = document.getElementById('scansTable');
+  if (!data.scans?.length) { tbody.innerHTML = '<tr><td colspan="9" class="empty">No scans found</td></tr>'; return; }
+  tbody.innerHTML = data.scans.map((s,i) => `
+    <tr>
+      <td style="color:var(--gray)">${scanOffset+i+1}</td>
+      <td>${s.farmer_name || '—'}<br/><small style="color:var(--gray)">${s.farmer_mobile||''}</small></td>
+      <td><strong>${s.crop_name || '—'}</strong></td>
+      <td>${s.crop_confidence ? Math.round(s.crop_confidence*100)+'%' : '—'}</td>
+      <td><span class="badge ${statusBadge(s.health_status)}">${s.health_status||'—'}</span></td>
+      <td>${s.disease_name||'None'}</td>
+      <td><span class="badge ${severityBadge(s.severity)}">${s.severity||'—'}</span></td>
+      <td>${s.created_at?.split('T')[0]||s.created_at?.split(' ')[0]||''}</td>
+      <td><button class="btn-edit" onclick='showScanDetail(${JSON.stringify(s)})'>View</button></td>
+    </tr>`).join('');
+  document.getElementById('scanPagination').innerHTML = `<span style="font-size:13px;color:var(--gray)">Showing ${data.scans.length} of ${data.total}</span>`;
+}
+
+function showScanDetail(s) {
+  const recs = (() => { try { return JSON.parse(s.recommendations)||[]; } catch(e) { return []; } })();
+  document.getElementById('scanModalContent').innerHTML = `
+    <div class="detail-row"><div class="detail-label">Farmer</div><div class="detail-value">${s.farmer_name||'Anonymous'} (${s.farmer_mobile||''})</div></div>
+    <div class="detail-row"><div class="detail-label">Crop</div><div class="detail-value"><strong>${s.crop_name||'Unknown'}</strong> — ${s.crop_confidence?Math.round(s.crop_confidence*100)+'% confidence':'—'}</div></div>
+    <div class="detail-row"><div class="detail-label">Health</div><div class="detail-value"><span class="badge ${statusBadge(s.health_status)}">${s.health_status||'—'}</span></div></div>
+    <div class="detail-row"><div class="detail-label">Disease</div><div class="detail-value">${s.disease_name||'None'} ${s.disease_confidence?'('+Math.round(s.disease_confidence*100)+'%)':''}</div></div>
+    <div class="detail-row"><div class="detail-label">Severity</div><div class="detail-value"><span class="badge ${severityBadge(s.severity)}">${s.severity||'—'}</span></div></div>
+    <div class="detail-row"><div class="detail-label">Cause</div><div class="detail-value">${s.cause||'—'}</div></div>
+    <div class="detail-row"><div class="detail-label">Analysis</div><div class="detail-value">${s.analysis||'—'}</div></div>
+    <div class="detail-row"><div class="detail-label">Recommended Action</div><div class="detail-value">${s.action||'—'}</div></div>
+    <div class="detail-row"><div class="detail-label">Recommendations</div><div class="detail-value">${recs.map(r=>`• ${r}`).join('<br/>')||'—'}</div></div>
+    <div class="detail-row"><div class="detail-label">Image Quality</div><div class="detail-value">${s.image_quality||'—'}</div></div>
+    <div class="detail-row"><div class="detail-label">Date</div><div class="detail-value">${s.created_at||'—'}</div></div>`;
+  document.getElementById('scanModal').classList.add('show');
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function statusBadge(s) {
+  if (!s) return 'badge-gray';
+  if (s==='Healthy') return 'badge-green';
+  if (s==='Diseased'||s==='Infected') return 'badge-red';
+  return 'badge-yellow';
+}
+function severityBadge(s) {
+  if (s==='High') return 'badge-red';
+  if (s==='Medium') return 'badge-yellow';
+  if (s==='Low') return 'badge-green';
+  return 'badge-gray';
+}
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+</script>
+</body>
+</html>

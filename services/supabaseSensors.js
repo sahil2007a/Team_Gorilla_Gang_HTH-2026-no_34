@@ -22,9 +22,10 @@ function parseSoilValue(rawSoil) {
   if (rawSoil === undefined || rawSoil === null) return null;
   const num = Number(rawSoil);
   if (isNaN(num)) return null;
-  if (num <= 100) return Math.round(num);
-  // 12-bit ADC mapping (4095 dry in air = 0%, ~1000 in wet soil = 100%)
-  const percentage = Math.round(((4095 - num) / 3000) * 100);
+  if (num === 0) return 0;
+  if (num > 0 && num <= 100) return Math.round(num);
+  // 12-bit ADC mapping (4095 dry = 0%, 0 submerged = 100%)
+  const percentage = Math.round(((4095 - num) / 4095) * 100);
   return Math.max(0, Math.min(100, percentage));
 }
 

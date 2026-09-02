@@ -70,14 +70,14 @@ export default function IrrigationScreen() {
         <View style={styles.statsGrid}>
           <StatCard
             label="Soil Moisture"
-            value={soilMoisture?.value ?? (sensors?.readings?.soilMoisture?.value || 42)}
+            value={(typeof soilMoisture === 'number' ? soilMoisture : soilMoisture?.value) ?? (sensors?.readings?.soilMoisture?.value || 42)}
             unit="%"
             icon={<Droplets size={18} color={Colors.primary} />}
             color={Colors.primary}
           />
           <StatCard
             label="Temperature"
-            value={temperature?.value ?? (sensors?.readings?.temperature?.value || 29)}
+            value={(typeof temperature === 'number' ? temperature : temperature?.value) ?? (sensors?.readings?.temperature?.value || 29)}
             unit="°C"
             icon={<Thermometer size={18} color={Colors.danger} />}
             color={Colors.danger}
@@ -86,7 +86,7 @@ export default function IrrigationScreen() {
         <View style={[styles.statsGrid, { marginTop: Spacing.sm }]}>
           <StatCard
             label="Air Humidity"
-            value={humidity?.value ?? 64}
+            value={(typeof humidity === 'number' ? humidity : humidity?.value) ?? 64}
             unit="%"
             icon={<CloudRain size={18} color={Colors.info} />}
             color={Colors.info}
@@ -104,18 +104,18 @@ export default function IrrigationScreen() {
           <View style={styles.moistureHeader}>
             <Text style={styles.moistureTitle}>{t('Soil Moisture Level')}</Text>
             <Badge 
-              label={(soilMoisture?.value ?? 42) < 35 ? "Below Optimal" : (soilMoisture?.value ?? 42) > 75 ? "Waterlogged" : "Optimal"} 
-              variant={(soilMoisture?.value ?? 42) < 35 ? "warning" : (soilMoisture?.value ?? 42) > 75 ? "danger" : "success"} 
+              label={((typeof soilMoisture === 'number' ? soilMoisture : soilMoisture?.value) ?? 42) < 35 ? "Below Optimal" : ((typeof soilMoisture === 'number' ? soilMoisture : soilMoisture?.value) ?? 42) > 75 ? "Waterlogged" : "Optimal"} 
+              variant={((typeof soilMoisture === 'number' ? soilMoisture : soilMoisture?.value) ?? 42) < 35 ? "warning" : ((typeof soilMoisture === 'number' ? soilMoisture : soilMoisture?.value) ?? 42) > 75 ? "danger" : "success"} 
             />
           </View>
           <ProgressBar
-            progress={soilMoisture?.value ?? (sensors?.readings?.soilMoisture?.value || 42)}
-            color={(soilMoisture?.value ?? 42) < 35 ? Colors.warning : Colors.success}
+            progress={(typeof soilMoisture === 'number' ? soilMoisture : soilMoisture?.value) ?? (sensors?.readings?.soilMoisture?.value || 42)}
+            color={((typeof soilMoisture === 'number' ? soilMoisture : soilMoisture?.value) ?? 42) < 35 ? Colors.warning : Colors.success}
             height={10}
             style={{ marginVertical: Spacing.sm }}
           />
           <View style={styles.moistureRange}>
-            <Text style={styles.rangeLabel}>{t('Current')}: {soilMoisture?.value ?? 42}%</Text>
+            <Text style={styles.rangeLabel}>{t('Current')}: {(typeof soilMoisture === 'number' ? soilMoisture : soilMoisture?.value) ?? 42}%</Text>
             <Text style={styles.rangeLabel}>{t('Optimal: 40–70%')}</Text>
           </View>
         </View>

@@ -1,0 +1,82 @@
+{
+  "Healthy": {
+    "severity": "Low",
+    "visual_growth_status": "Good",
+    "actions": [
+      "Maintain suitable soil moisture",
+      "Provide adequate sunlight",
+      "Monitor leaves regularly",
+      "Maintain appropriate nutrition"
+    ]
+  },
+  "Early Blight": {
+    "severity": "Moderate",
+    "visual_growth_status": "Needs Attention",
+    "actions": [
+      "Remove severely affected leaves",
+      "Improve air circulation",
+      "Avoid unnecessary leaf wetness",
+      "Monitor nearby plants"
+    ]
+  },
+  "Late Blight": {
+    "severity": "High",
+    "visual_growth_status": "Unhealthy",
+    "actions": [
+      "Remove and destroy infected plants immediately",
+      "Apply protective fungicides to healthy plants",
+      "Avoid overhead watering",
+      "Ensure good field drainage"
+    ]
+  },
+  "Leaf Spot": {
+    "severity": "Moderate",
+    "visual_growth_status": "Needs Attention",
+    "actions": [
+      "Remove spotted leaves",
+      "Water at the base of the plant",
+      "Apply copper-based fungicide if severe",
+      "Rotate crops next season"
+    ]
+  },
+  "Rust": {
+    "severity": "High",
+    "visual_growth_status": "Unhealthy",
+    "actions": [
+      "Remove infected leaves or plants",
+      "Space plants to increase airflow",
+      "Apply sulfur dust or neem oil",
+      "Avoid excess nitrogen fertilizer"
+    ]
+  },
+  "Powdery Mildew": {
+    "severity": "Moderate",
+    "visual_growth_status": "Needs Attention",
+    "actions": [
+      "Prune affected areas to improve airflow",
+      "Apply baking soda or sulfur-based sprays",
+      "Avoid watering from above",
+      "Plant in full sun if possible"
+    ]
+  },
+  "Mosaic Virus": {
+    "severity": "High",
+    "visual_growth_status": "Unhealthy",
+    "actions": [
+      "Remove and destroy infected plants (do not compost)",
+      "Control aphid populations",
+      "Disinfect tools after use",
+      "Plant resistant varieties"
+    ]
+  },
+  "Bacterial Spot": {
+    "severity": "High",
+    "visual_growth_status": "Unhealthy",
+    "actions": [
+      "Remove infected plant debris",
+      "Avoid working in the field when plants are wet",
+      "Apply copper-based sprays preventatively",
+      "Use certified disease-free seeds"
+    ]
+  }
+}
