@@ -41,66 +41,68 @@ function parseHumValue(rawHum) {
   return isNaN(num) ? null : Number(num.toFixed(1));
 }
 
+let lastDirectFailTime = 0;
+
 export const supabaseSensors = {
   /**
    * Fetches the single latest sensor reading from Supabase table 'sensor_readings'.
    */
   getLatestReading: async () => {
-    // 1. Primary: Direct Supabase REST fetch
-    try {
-      const url = `${SUPABASE_URL}/rest/v1/sensor_readings?select=*&order=id.desc&limit=1`;
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: getHeaders(),
-      });
+    // 1. Primary: Direct Supabase REST fetch (with 5 min cooldown if unreachable)
+    if (Date.now() - lastDirectFailTime > 300000) {
+      try {
+        const url = `${SUPABASE_URL}/rest/v1/sensor_readings?select=*&order=id.desc&limit=1`;
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: getHeaders(),
+        });
 
-      if (response.ok) {
-        const rows = await response.json();
-        if (Array.isArray(rows) && rows.length > 0) {
-          const row = rows[0];
-          const rawTemp = row.temperature ?? row.temp ?? row.temperature_c ?? row.t;
-          const rawHum = row.humidity ?? row.hum ?? row.humidity_pct ?? row.h;
-          const rawSoil = row.soil_moisture ?? row.soil ?? row.moisture ?? row.sm;
+        if (response.ok) {
+          const rows = await response.json();
+          if (Array.isArray(rows) && rows.length > 0) {
+            const row = rows[0];
+            const rawTemp = row.temperature ?? row.temp ?? row.temperature_c ?? row.t;
+            const rawHum = row.humidity ?? row.hum ?? row.humidity_pct ?? row.h;
+            const rawSoil = row.soil_moisture ?? row.soil ?? row.moisture ?? row.sm;
 
-          return {
-            success: true,
-            hasData: true,
-            tableUsed: 'sensor_readings',
-            id: row.id,
-            deviceId: row.device_id || row.sensor_id || 'ESP32-SOIL-001',
-            soilMoisture: parseSoilValue(rawSoil),
-            temperature: parseTempValue(rawTemp),
-            humidity: parseHumValue(rawHum),
-            createdAt: row.created_at || row.timestamp || new Date().toISOString(),
-            raw: row,
-          };
+            return {
+              success: true,
+              hasData: true,
+              tableUsed: 'sensor_readings',
+              id: row.id,
+              deviceId: row.device_id || row.sensor_id || 'ESP32-SOIL-001',
+              soilMoisture: parseSoilValue(rawSoil),
+              temperature: parseTempValue(rawTemp),
+              humidity: parseHumValue(rawHum),
+              createdAt: row.created_at || row.timestamp || new Date().toISOString(),
+              raw: row,
+            };
+          }
         }
+      } catch (directErr) {
+        lastDirectFailTime = Date.now();
       }
-    } catch (directErr) {
-      console.log('[Supabase Direct Sensor fetch note]:', directErr.message);
     }
 
-    // 2. Secondary: Backend proxy fallback (with 30s cooldown if down)
-    if (Date.now() - lastProxyFailTime > 30000) {
-      try {
-        const backendRes = await apiClient.get('/sensors/live', { timeout: 1500 });
-        if (backendRes && backendRes.success && backendRes.hasData) {
-          return {
-            success: true,
-            hasData: true,
-            tableUsed: 'sensor_readings (proxy)',
-            id: backendRes.id,
-            deviceId: backendRes.deviceId || 'ESP32-SOIL-001',
-            soilMoisture: backendRes.soilMoisture,
-            temperature: backendRes.temperature,
-            humidity: backendRes.humidity,
-            createdAt: backendRes.createdAt,
-            raw: backendRes.raw,
-          };
-        }
-      } catch (backendErr) {
-        lastProxyFailTime = Date.now();
+    // 2. Secondary: Backend proxy fallback
+    try {
+      const backendRes = await apiClient.get('/sensors/live', { timeout: 2500 });
+      if (backendRes && backendRes.success && backendRes.hasData) {
+        return {
+          success: true,
+          hasData: true,
+          tableUsed: 'sensor_readings (backend)',
+          id: backendRes.id,
+          deviceId: backendRes.deviceId || 'ESP32-SOIL-001',
+          soilMoisture: backendRes.soilMoisture,
+          temperature: backendRes.temperature,
+          humidity: backendRes.humidity,
+          createdAt: backendRes.createdAt,
+          raw: backendRes.raw,
+        };
       }
+    } catch (backendErr) {
+      // Backend error fallback handled below
     }
 
     return {
@@ -120,43 +122,45 @@ export const supabaseSensors = {
    * Fetches up to N most recent sensor readings (FIFO history) from Supabase.
    */
   getRecentReadings: async (limit = 5) => {
-    // 1. Primary: Direct Supabase REST
-    try {
-      const url = `${SUPABASE_URL}/rest/v1/sensor_readings?select=*&order=id.desc&limit=${limit}`;
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: getHeaders(),
-      });
+    // 1. Primary: Direct Supabase REST (with 5 min cooldown if unreachable)
+    if (Date.now() - lastDirectFailTime > 300000) {
+      try {
+        const url = `${SUPABASE_URL}/rest/v1/sensor_readings?select=*&order=id.desc&limit=${limit}`;
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: getHeaders(),
+        });
 
-      if (response.ok) {
-        const rows = await response.json();
-        if (Array.isArray(rows) && rows.length > 0) {
-          const mapped = rows.map((row, index) => {
-            const rawTemp = row.temperature ?? row.temp ?? row.temperature_c ?? row.t;
-            const rawHum = row.humidity ?? row.hum ?? row.humidity_pct ?? row.h;
-            const rawSoil = row.soil_moisture ?? row.soil ?? row.moisture ?? row.sm;
+        if (response.ok) {
+          const rows = await response.json();
+          if (Array.isArray(rows) && rows.length > 0) {
+            const mapped = rows.map((row, index) => {
+              const rawTemp = row.temperature ?? row.temp ?? row.temperature_c ?? row.t;
+              const rawHum = row.humidity ?? row.hum ?? row.humidity_pct ?? row.h;
+              const rawSoil = row.soil_moisture ?? row.soil ?? row.moisture ?? row.sm;
+
+              return {
+                id: row.id || `entry_${index}_${Date.now()}`,
+                soilMoisture: parseSoilValue(rawSoil),
+                temperature: parseTempValue(rawTemp),
+                humidity: parseHumValue(rawHum),
+                deviceId: row.device_id || row.sensor_id || 'ESP32-SOIL-001',
+                createdAt: row.created_at || row.timestamp || new Date().toISOString(),
+                raw: row,
+              };
+            });
 
             return {
-              id: row.id || `entry_${index}_${Date.now()}`,
-              soilMoisture: parseSoilValue(rawSoil),
-              temperature: parseTempValue(rawTemp),
-              humidity: parseHumValue(rawHum),
-              deviceId: row.device_id || row.sensor_id || 'ESP32-SOIL-001',
-              createdAt: row.created_at || row.timestamp || new Date().toISOString(),
-              raw: row,
+              success: true,
+              hasData: true,
+              tableUsed: 'sensor_readings',
+              entries: mapped,
             };
-          });
-
-          return {
-            success: true,
-            hasData: true,
-            tableUsed: 'sensor_readings',
-            entries: mapped,
-          };
+          }
         }
+      } catch (directErr) {
+        lastDirectFailTime = Date.now();
       }
-    } catch (directErr) {
-      console.log('[Supabase Direct History note]:', directErr.message);
     }
 
     // 2. Secondary: Backend proxy fallback
@@ -166,13 +170,14 @@ export const supabaseSensors = {
         return {
           success: true,
           hasData: true,
-          tableUsed: 'sensor_readings (proxy)',
+          tableUsed: 'sensor_readings (backend)',
           entries: backendRes.entries,
         };
       }
     } catch (backendErr) {
-      console.log('[Sensors Backend History proxy note]:', backendErr.message);
+      // Backend error fallback handled below
     }
+
 
     return {
       success: true,
