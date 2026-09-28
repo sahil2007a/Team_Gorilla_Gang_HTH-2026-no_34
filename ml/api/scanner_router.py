@@ -372,7 +372,10 @@ def analyze_image(payload: ScanRequest, authorization: Optional[str] = Header(No
             conn.close()
 
     try:
-        img_bytes = base64.b64decode(payload.base64_data)
+        b64_str = payload.base64_data
+        if "," in b64_str:
+            b64_str = b64_str.split(",", 1)[1]
+        img_bytes = base64.b64decode(b64_str)
         img = Image.open(BytesIO(img_bytes)).convert("RGB")
         
         # 1. Real Computer Vision Pixel Extraction with Strict Chlorophyll Filter & Dynamic Confidence

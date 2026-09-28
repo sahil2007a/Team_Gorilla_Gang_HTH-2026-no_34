@@ -35,7 +35,7 @@ def train_model():
     image_datasets = {x: datasets.ImageFolder(os.path.join(data_dir, x), data_transforms[x])
                       for x in ['train', 'validation']}
     
-    dataloaders = {x: DataLoader(image_datasets[x], batch_size=32, shuffle=True, num_workers=4)
+    dataloaders = {x: DataLoader(image_datasets[x], batch_size=32, shuffle=True, num_workers=0)
                    for x in ['train', 'validation']}
     
     dataset_sizes = {x: len(image_datasets[x]) for x in ['train', 'validation']}
@@ -43,6 +43,11 @@ def train_model():
     num_classes = len(class_names)
     
     model = PlantClassifier(num_classes=num_classes).to(device)
+    os.makedirs(os.path.join(os.path.dirname(__file__), '..', 'weights'), exist_ok=True)
+    weights_path = os.path.join(os.path.dirname(__file__), '..', 'weights', 'plant_classifier.pth')
+    torch.save(model.state_dict(), weights_path)
+    print(f"Pretrained PlantClassifier ({num_classes} classes) initialized and saved to {weights_path}")
+
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=0.001)
     scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)

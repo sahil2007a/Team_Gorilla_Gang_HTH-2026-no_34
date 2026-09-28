@@ -44,6 +44,7 @@ ml/api/*.log
 *.log
 __pycache__/
 *.pyc
+ml/data/
 
 # typescript
 *.tsbuildinfo
