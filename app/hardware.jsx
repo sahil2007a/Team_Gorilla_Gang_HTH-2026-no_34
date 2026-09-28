@@ -115,9 +115,11 @@ export default function HardwareScreen() {
         {/* ── SECTION 1: SOIL & NPK SENSOR NODES ── */}
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: Spacing.sm }}>
           <Text style={styles.sectionTitle}>{t('Soil Moisture & IoT Probes')}</Text>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#dcfce7', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 8 }}>
-            <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#15803d' }} />
-            <Text style={{ fontSize: 9, fontWeight: '800', color: '#15803d' }}>SUPABASE LIVE</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: isLive ? '#dcfce7' : '#fef3c7', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 }}>
+            <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: isLive ? '#15803d' : '#d97706' }} />
+            <Text style={{ fontSize: 10, fontWeight: '800', color: isLive ? '#15803d' : '#d97706' }}>
+              {isLive ? t('LIVE TELEMETRY') : t('CONNECTING')}
+            </Text>
           </View>
         </View>
 
@@ -125,69 +127,42 @@ export default function HardwareScreen() {
           <View style={styles.sensorHeader}>
             <View style={styles.sensorTitleBox}>
               <Cpu size={18} color="#2d7a3a" />
-              <Text style={styles.sensorTitle}>{deviceId || t('ESP32 Live Soil Probe')}</Text>
+              <Text style={styles.sensorTitle}>{deviceId || 'ESP32-SOIL-001'}</Text>
             </View>
-            <Text style={styles.batteryText}>🔋 96%</Text>
+            <TouchableOpacity onPress={() => refresh()} disabled={refreshing} style={{ padding: 4 }}>
+              <Text style={styles.batteryText}>{refreshing ? '⏳ Syncing...' : '🔄 Refresh'}</Text>
+            </TouchableOpacity>
           </View>
           <View style={styles.sensorGrid}>
             <View style={styles.sensorStat}>
               <Text style={styles.statLabel}>{t('Soil Moisture')}</Text>
-              <Text style={[styles.statValue, { color: ((typeof soilMoisture === 'number' ? soilMoisture : soilMoisture?.value) ?? 42) < 35 ? '#dc2626' : '#15803d' }]}>
-                {(typeof soilMoisture === 'number' ? soilMoisture : soilMoisture?.value) ?? 42}%
+              <Text style={[styles.statValue, { color: soilMoisture != null && soilMoisture < 35 ? '#dc2626' : '#15803d' }]}>
+                {soilMoisture != null ? `${soilMoisture}%` : '--'}
               </Text>
-              <Text style={[styles.statSub, { color: ((typeof soilMoisture === 'number' ? soilMoisture : soilMoisture?.value) ?? 42) < 35 ? '#dc2626' : '#15803d', fontWeight: '700' }]}>
-                {((typeof soilMoisture === 'number' ? soilMoisture : soilMoisture?.value) ?? 42) < 35 ? t('Needs Water') : t('Optimal')}
+              <Text style={[styles.statSub, { color: soilMoisture != null && soilMoisture < 35 ? '#dc2626' : '#15803d', fontWeight: '700' }]}>
+                {soilMoisture != null ? (soilMoisture < 35 ? t('Needs Water') : t('Optimal')) : t('Awaiting Sensor')}
               </Text>
             </View>
             <View style={styles.sensorStat}>
               <Text style={styles.statLabel}>{t('Temperature')}</Text>
-              <Text style={styles.statValue}>{(typeof temperature === 'number' ? temperature : temperature?.value) ?? 28.5}°C</Text>
-              <Text style={styles.statSub}>{t('Live Telemetry')}</Text>
+              <Text style={styles.statValue}>{temperature != null ? `${temperature}°C` : '--'}</Text>
+              <Text style={styles.statSub}>{temperature != null ? t('Ambient Foliar') : t('Reading...')}</Text>
             </View>
             <View style={styles.sensorStat}>
               <Text style={styles.statLabel}>{t('Humidity')}</Text>
-              <Text style={styles.statValue}>{(typeof humidity === 'number' ? humidity : humidity?.value) ?? 64}%</Text>
+              <Text style={styles.statValue}>{humidity != null ? `${humidity}%` : '--'}</Text>
               <Text style={styles.statSub}>{t('Relative Hum.')}</Text>
             </View>
             <View style={styles.sensorStat}>
-              <Text style={styles.statLabel}>{t('Network Link')}</Text>
-              <Text style={[styles.statValue, { fontSize: 13, color: '#15803d' }]}>Supabase 200</Text>
-              <Text style={styles.statSub}>{t('Auto-Polling 4s')}</Text>
+              <Text style={styles.statLabel}>{t('Hardware Status')}</Text>
+              <Text style={[styles.statValue, { fontSize: 13, color: isLive ? '#15803d' : '#d97706' }]}>
+                {isLive ? t('Online (Active)') : t('Awaiting Sync')}
+              </Text>
+              <Text style={styles.statSub}>{createdAt ? new Date(createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : t('Auto-Polling')}</Text>
             </View>
           </View>
         </View>
 
-        <View style={styles.sensorCard}>
-          <View style={styles.sensorHeader}>
-            <View style={styles.sensorTitleBox}>
-              <Cpu size={18} color="#d97706" />
-              <Text style={styles.sensorTitle}>{t('Node 02: Chilli Patch')}</Text>
-            </View>
-            <Text style={styles.batteryText}>🔋 79%</Text>
-          </View>
-          <View style={styles.sensorGrid}>
-            <View style={styles.sensorStat}>
-              <Text style={styles.statLabel}>{t('Moisture (15cm)')}</Text>
-              <Text style={[styles.statValue, { color: '#dc2626' }]}>29%</Text>
-              <Text style={[styles.statSub, { color: '#dc2626', fontWeight: '700' }]}>{t('Needs Water')}</Text>
-            </View>
-            <View style={styles.sensorStat}>
-              <Text style={styles.statLabel}>{t('Soil Temp')}</Text>
-              <Text style={styles.statValue}>28.2°C</Text>
-              <Text style={styles.statSub}>{t('Warm')}</Text>
-            </View>
-            <View style={styles.sensorStat}>
-              <Text style={styles.statLabel}>NPK Ratio</Text>
-              <Text style={styles.statValue}>38:14:130</Text>
-              <Text style={styles.statSub}>mg/kg</Text>
-            </View>
-            <View style={styles.sensorStat}>
-              <Text style={styles.statLabel}>{t('Electrical Cond.')}</Text>
-              <Text style={styles.statValue}>1.4 dS/m</Text>
-              <Text style={styles.statSub}>{t('Normal')}</Text>
-            </View>
-          </View>
-        </View>
 
         {/* ── SECTION 2: AUTOMATED DRIP VALVES ── */}
         <Text style={styles.sectionTitle}>{t('Automated Drip Irrigation Valves')}</Text>

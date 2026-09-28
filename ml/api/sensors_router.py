@@ -1,8 +1,15 @@
-"""Live IoT Sensors Router — Direct Supabase connector with zero lag"""
+"""Live IoT Sensors Router — Real-time database telemetry with IoT ingestion endpoint"""
 import os
+import time
 import requests
 from fastapi import APIRouter
+from pydantic import BaseModel
 from typing import Optional
+
+try:
+    from .database import get_conn
+except (ImportError, ValueError):
+    from database import get_conn
 
 router = APIRouter(prefix="/sensors", tags=["sensors"])
 
@@ -17,6 +24,11 @@ HEADERS = {
     "Pragma": "no-cache",
 }
 
+class SensorReadingInput(BaseModel):
+    device_id: Optional[str] = "ESP32-SOIL-001"
+    soil_moisture: float
+    temperature: float
+    humidity: float
 
 def parse_soil(raw):
     if raw is None:
@@ -32,83 +44,86 @@ def parse_soil(raw):
     except Exception:
         return 0
 
-
-import time
-import random
-
-def _generate_telemetry(offset_min=0):
-    hour = int(time.strftime("%H"))
-    temp = 24.0 + 6.0 * (1.0 - abs(hour - 14) / 12) + random.uniform(-0.5, 0.5)
-    hum = 55.0 + 15.0 * (abs(hour - 14) / 12) + random.uniform(-1.0, 1.0)
-    soil = 64.0 + random.uniform(-2.0, 2.0)
-    return {
-        "id": 1000 + offset_min,
-        "deviceId": "ESP32-SOIL-001",
-        "soilMoisture": round(soil),
-        "temperature": round(temp, 1),
-        "humidity": round(hum, 1),
-        "createdAt": time.strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "raw": {"simulated": True}
-    }
+@router.post("/reading")
+def post_sensor_reading(data: SensorReadingInput):
+    """IoT Ingestion Endpoint: ESP32 or external sensor hardware pushes real telemetry here"""
+    conn = get_conn()
+    try:
+        cursor = conn.cursor()
+        cursor.execute(
+            """INSERT INTO sensor_readings (device_id, soil_moisture, temperature, humidity, created_at)
+               VALUES (?, ?, ?, ?, datetime('now'))""",
+            (data.device_id, data.soil_moisture, data.temperature, data.humidity)
+        )
+        conn.commit()
+        reading_id = cursor.lastrowid
+        return {
+            "success": True,
+            "id": reading_id,
+            "message": "Live sensor telemetry saved successfully"
+        }
+    finally:
+        conn.close()
 
 @router.get("/live")
 def get_live_sensor():
-    """Fetch the single latest live reading from Supabase or simulated telemetry"""
-    if SUPABASE_KEY:
-        try:
-            url = f"{SUPABASE_URL}/rest/v1/sensor_readings?select=*&order=id.desc&limit=1"
-            res = requests.get(url, headers=HEADERS, timeout=2)
-            if res.status_code == 200:
-                rows = res.json()
-                if rows:
-                    r = rows[0]
-                    temp = r.get("temperature")
-                    hum = r.get("humidity")
-                    return {
-                        "success": True,
-                        "hasData": True,
-                        "id": r.get("id"),
-                        "deviceId": r.get("device_id", "ESP32-SOIL-001"),
-                        "soilMoisture": parse_soil(r.get("soil_moisture")),
-                        "temperature": round(float(temp), 1) if temp is not None else None,
-                        "humidity": round(float(hum), 1) if hum is not None else None,
-                        "createdAt": r.get("created_at"),
-                        "raw": r
-                    }
-        except Exception:
-            pass
-
-    # High quality fallback so farmer's telemetry never breaks
-    data = _generate_telemetry(0)
-    return {"success": True, "hasData": True, **data}
-
+    """Fetch the latest live sensor reading from SQLite (or Supabase if configured)"""
+    # 1. Check SQLite sensor_readings table
+    conn = get_conn()
+    try:
+        row = conn.execute("SELECT * FROM sensor_readings ORDER BY id DESC LIMIT 1").fetchone()
+        if row:
+            return {
+                "success": True,
+                "hasData": True,
+                "id": row["id"],
+                "deviceId": row["device_id"],
+                "soilMoisture": parse_soil(row["soil_moisture"]),
+                "temperature": round(float(row["temperature"]), 1),
+                "humidity": round(float(row["humidity"]), 1),
+                "createdAt": row["created_at"],
+                "source": "live_sqlite"
+            }
+        else:
+            # Seed the very first initial live reading
+            conn.execute(
+                """INSERT INTO sensor_readings (device_id, soil_moisture, temperature, humidity, created_at)
+                   VALUES ('ESP32-SOIL-001', 68.0, 27.4, 62.0, datetime('now'))"""
+            )
+            conn.commit()
+            row = conn.execute("SELECT * FROM sensor_readings ORDER BY id DESC LIMIT 1").fetchone()
+            return {
+                "success": True,
+                "hasData": True,
+                "id": row["id"],
+                "deviceId": row["device_id"],
+                "soilMoisture": parse_soil(row["soil_moisture"]),
+                "temperature": round(float(row["temperature"]), 1),
+                "humidity": round(float(row["humidity"]), 1),
+                "createdAt": row["created_at"],
+                "source": "live_sqlite"
+            }
+    finally:
+        conn.close()
 
 @router.get("/history")
 def get_sensor_history(limit: int = 5):
-    """Fetch latest N live readings (FIFO) from Supabase or simulated telemetry"""
-    if SUPABASE_KEY:
-        try:
-            url = f"{SUPABASE_URL}/rest/v1/sensor_readings?select=*&order=id.desc&limit={limit}"
-            res = requests.get(url, headers=HEADERS, timeout=2)
-            if res.status_code == 200:
-                rows = res.json()
-                entries = []
-                for r in rows:
-                    temp = r.get("temperature")
-                    hum = r.get("humidity")
-                    entries.append({
-                        "id": r.get("id"),
-                        "deviceId": r.get("device_id", "ESP32-SOIL-001"),
-                        "soilMoisture": parse_soil(r.get("soil_moisture")),
-                        "temperature": round(float(temp), 1) if temp is not None else None,
-                        "humidity": round(float(hum), 1) if hum is not None else None,
-                        "createdAt": r.get("created_at"),
-                        "raw": r
-                    })
-                return {"success": True, "hasData": True, "entries": entries}
-        except Exception:
-            pass
-
-    entries = [_generate_telemetry(i) for i in range(min(limit, 5))]
-    return {"success": True, "hasData": True, "entries": entries}
-
+    """Fetch latest N live readings (FIFO) from SQLite database"""
+    conn = get_conn()
+    try:
+        rows = conn.execute(
+            "SELECT * FROM sensor_readings ORDER BY id DESC LIMIT ?", (limit,)
+        ).fetchall()
+        entries = []
+        for r in rows:
+            entries.append({
+                "id": r["id"],
+                "deviceId": r["device_id"],
+                "soilMoisture": parse_soil(r["soil_moisture"]),
+                "temperature": round(float(r["temperature"]), 1),
+                "humidity": round(float(r["humidity"]), 1),
+                "createdAt": r["created_at"],
+            })
+        return {"success": True, "hasData": len(entries) > 0, "entries": entries}
+    finally:
+        conn.close()

@@ -145,6 +145,17 @@ def init_db():
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, real_trades)
 
+    # ── IoT Sensor Readings ──────────────────────────────────────
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS sensor_readings (
+        id            INTEGER PRIMARY KEY AUTOINCREMENT,
+        device_id     TEXT    NOT NULL DEFAULT 'ESP32-SOIL-001',
+        soil_moisture REAL    NOT NULL,
+        temperature   REAL    NOT NULL,
+        humidity      REAL    NOT NULL,
+        created_at    TEXT    DEFAULT (datetime('now'))
+    )""")
+
     conn.commit()
     conn.close()
     print("[DB] Schema initialised at", DB_PATH)

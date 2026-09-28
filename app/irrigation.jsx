@@ -62,23 +62,25 @@ export default function IrrigationScreen() {
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: Spacing.xs }}>
           <SectionHeader title={t('Live IoT Status')} />
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#dcfce7', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 8 }}>
-            <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#15803d' }} />
-            <Text style={{ fontSize: 9, fontWeight: '800', color: '#15803d' }}>SUPABASE</Text>
+            <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: isLive ? '#15803d' : '#d97706' }} />
+            <Text style={{ fontSize: 9, fontWeight: '800', color: isLive ? '#15803d' : '#d97706' }}>
+              {isLive ? 'LIVE' : 'SYNCING'}
+            </Text>
           </View>
         </View>
 
         <View style={styles.statsGrid}>
           <StatCard
             label="Soil Moisture"
-            value={(typeof soilMoisture === 'number' ? soilMoisture : soilMoisture?.value) ?? (sensors?.readings?.soilMoisture?.value || 42)}
-            unit="%"
+            value={soilMoisture != null ? soilMoisture : '--'}
+            unit={soilMoisture != null ? '%' : ''}
             icon={<Droplets size={18} color={Colors.primary} />}
             color={Colors.primary}
           />
           <StatCard
             label="Temperature"
-            value={(typeof temperature === 'number' ? temperature : temperature?.value) ?? (sensors?.readings?.temperature?.value || 29)}
-            unit="°C"
+            value={temperature != null ? temperature : '--'}
+            unit={temperature != null ? '°C' : ''}
             icon={<Thermometer size={18} color={Colors.danger} />}
             color={Colors.danger}
           />
@@ -86,8 +88,8 @@ export default function IrrigationScreen() {
         <View style={[styles.statsGrid, { marginTop: Spacing.sm }]}>
           <StatCard
             label="Air Humidity"
-            value={(typeof humidity === 'number' ? humidity : humidity?.value) ?? 64}
-            unit="%"
+            value={humidity != null ? humidity : '--'}
+            unit={humidity != null ? '%' : ''}
             icon={<CloudRain size={18} color={Colors.info} />}
             color={Colors.info}
           />
@@ -104,21 +106,22 @@ export default function IrrigationScreen() {
           <View style={styles.moistureHeader}>
             <Text style={styles.moistureTitle}>{t('Soil Moisture Level')}</Text>
             <Badge 
-              label={((typeof soilMoisture === 'number' ? soilMoisture : soilMoisture?.value) ?? 42) < 35 ? "Below Optimal" : ((typeof soilMoisture === 'number' ? soilMoisture : soilMoisture?.value) ?? 42) > 75 ? "Waterlogged" : "Optimal"} 
-              variant={((typeof soilMoisture === 'number' ? soilMoisture : soilMoisture?.value) ?? 42) < 35 ? "warning" : ((typeof soilMoisture === 'number' ? soilMoisture : soilMoisture?.value) ?? 42) > 75 ? "danger" : "success"} 
+              label={soilMoisture == null ? "Reading..." : soilMoisture < 35 ? "Below Optimal" : soilMoisture > 75 ? "Waterlogged" : "Optimal"} 
+              variant={soilMoisture == null ? "default" : soilMoisture < 35 ? "warning" : soilMoisture > 75 ? "danger" : "success"} 
             />
           </View>
           <ProgressBar
-            progress={(typeof soilMoisture === 'number' ? soilMoisture : soilMoisture?.value) ?? (sensors?.readings?.soilMoisture?.value || 42)}
-            color={((typeof soilMoisture === 'number' ? soilMoisture : soilMoisture?.value) ?? 42) < 35 ? Colors.warning : Colors.success}
+            progress={soilMoisture != null ? soilMoisture : 0}
+            color={soilMoisture != null && soilMoisture < 35 ? Colors.warning : Colors.success}
             height={10}
             style={{ marginVertical: Spacing.sm }}
           />
           <View style={styles.moistureRange}>
-            <Text style={styles.rangeLabel}>{t('Current')}: {(typeof soilMoisture === 'number' ? soilMoisture : soilMoisture?.value) ?? 42}%</Text>
+            <Text style={styles.rangeLabel}>{t('Current')}: {soilMoisture != null ? `${soilMoisture}%` : '--'}</Text>
             <Text style={styles.rangeLabel}>{t('Optimal: 40–70%')}</Text>
           </View>
         </View>
+
 
         {/* AI Recommendation */}
         {recommendation && (
